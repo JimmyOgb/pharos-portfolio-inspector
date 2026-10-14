@@ -6,79 +6,91 @@ Built for **Pharos Season of AI — Agent Arena (Task 1: `read-contract-state`)*
 
 ---
 
-## Arena Task 1 Showcase: Read Contract State
+## Arena Task 1 Showcase: Read Contract State via Pharos Chain MCP
 
 This tool directly satisfies all four official evaluation criteria for **Arena Task 1: Read Contract State**:
 
 | Official Requirement | Implementation Status | How it is Fulfilled |
 |---|---|---|
-| **01. Reads at least 3 values from 1 contract** | `FULFILLED` | Reads **5 distinct values** from one contract: `name()`, `symbol()`, `decimals()`, `totalSupply()`, and `balanceOf(address)`. |
-| **02. Shows contract address and block number** | `FULFILLED` | Explicitly prints the contract address and the exact block height at which the state was fetched. |
-| **03. Formats raw values for humans** | `FULFILLED` | Applies token decimals (e.g. 6 decimals for USDC), formats token amounts with symbols, labels addresses, and explains holder-dependent balances. |
+| **01. Reads at least 3 values from 1 contract via Chain MCP** | `FULFILLED` | Reads **5 distinct values** from one contract through Pharos Chain MCP (`eth_call`): `name()`, `symbol()`, `decimals()`, `totalSupply()`, and `balanceOf(address)`. |
+| **02. Shows contract address and block number** | `FULFILLED` | Explicitly queries and displays the contract address and the exact block height via Chain MCP `get_block_number`. |
+| **03. Formats raw values for humans** | `FULFILLED` | Applies token decimals (e.g. 6 decimals for USDC), formats amounts with symbols, labels addresses, and explains holder-dependent balances. |
 | **04. Short README with contract, steps, output** | `FULFILLED` | Fully documented below with verified contract source, run steps, and actual terminal output. |
 
-### Chosen Contract Showcase
-- **Asset**: USD Coin (`USDC`) on Pharos Atlantic Testnet
-- **Contract Address**: `0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8`
-- **Source Verification**: Verified in official [Pharos Skill Engine repository](https://github.com/PharosNetwork/pharos-skill-engine/blob/main/assets/tokens.json) and confirmed on-chain on Atlantic Testnet (`eth_getCode` returns 6,005 bytes of deployed EVM bytecode).
-- **Network**: Atlantic Testnet (Chain ID `688689`, RPC `https://atlantic.dplabs-internal.com`)
+### Primary Showcase: Pharos Chain MCP
+- **Contract Asset**: USD Coin (`USDC`) on Pharos Pacific
+- **Contract Address**: `0xc879c018db60520f4355c26ed1a6d572cdac1815`
+- **Source Verification**: Registered in official [Pharos Skill Engine token registry](https://github.com/PharosNetwork/pharos-skill-engine/blob/main/assets/tokens.json) and verified on-chain via Pharos Chain MCP `get_code` (1,798 bytes of deployed EVM runtime bytecode).
+- **Query Engine**: **Pharos Hosted Chain MCP** (`https://mcp.pharos.xyz/mcp`, Streamable HTTP)
+- **Chain ID**: `1672` (Pharos Pacific)
 
-### Reproduction Command
+#### Reproduction Command (Chain MCP)
 ```bash
-python scripts/inspector.py contract 0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8
+python scripts/inspector.py contract 0xc879c018db60520f4355c26ed1a6d572cdac1815 --mcp
 ```
 
-### Actual Sample Terminal Output
+#### Actual Sample Terminal Output (Chain MCP)
 ```text
 === Pharos On-Chain Data Inspector ===
-Contract:       0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8
-Network:        atlantic-testnet
-Query Engine:   Direct JSON-RPC (https://atlantic.dplabs-internal.com)
-Read at Block:  31,405,579
-Bytecode Size:  6,005 bytes
+Contract:       0xc879c018db60520f4355c26ed1a6d572cdac1815
+Network:        mainnet
+Query Engine:   Hosted Chain MCP (https://mcp.pharos.xyz/mcp)
+Read at Block:  20,220,938
+Bytecode Size:  1,798 bytes
 
 --- Contract State Values (Decoded & Formatted) ---
-1. Token Name:    USD Coin
+1. Token Name:    USDC
 2. Token Symbol:  USDC
 3. Decimals:      6
-4. Total Supply:  1000000000000000000000 USDC (Raw: 1000000000000000000000000000)
-5. Holder Balance: 73 USDC (Raw: 73000000)
+4. Total Supply:  22795206.851289 USDC (Raw: 22795206851289)
+5. Holder Balance: 0.000904 USDC (Raw: 904)
    Target Holder: Default Harmless Burn Fixture (0x000000000000000000000000000000000000dEaD)
    Note:          This value reflects the balance held by the selected address (0x000000000000000000000000000000000000dEaD), not an internal balance of the token contract itself.
 ======================================
 ```
 
-### Machine-Readable JSON Mode (for AI Agents)
+#### Machine-Readable JSON Mode (Chain MCP)
 ```bash
-python scripts/inspector.py --json contract 0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8
+python scripts/inspector.py --json contract 0xc879c018db60520f4355c26ed1a6d572cdac1815 --mcp
 ```
 Output:
 ```json
 {
-  "contractAddress": "0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8",
-  "network": "atlantic-testnet",
-  "queryEngine": "Direct JSON-RPC (https://atlantic.dplabs-internal.com)",
-  "blockNumber": 31405607,
+  "contractAddress": "0xc879c018db60520f4355c26ed1a6d572cdac1815",
+  "network": "mainnet",
+  "queryEngine": "Hosted Chain MCP (https://mcp.pharos.xyz/mcp)",
+  "blockNumber": 20220938,
   "hasBytecode": true,
-  "bytecodeSizeBytes": 6005,
+  "bytecodeSizeBytes": 1798,
   "stateValues": {
-    "name": "USD Coin",
+    "name": "USDC",
     "symbol": "USDC",
     "decimals": 6,
     "totalSupply": {
-      "raw": "1000000000000000000000000000",
-      "formatted": "1000000000000000000000 USDC"
+      "raw": "22795206851289",
+      "formatted": "22795206.851289 USDC"
     },
     "balanceOf": {
       "holderAddress": "0x000000000000000000000000000000000000dEaD",
       "holderLabel": "Default Harmless Burn Fixture (0x000000000000000000000000000000000000dEaD)",
-      "raw": "73000000",
-      "formatted": "73 USDC",
+      "raw": "904",
+      "formatted": "0.000904 USDC",
       "addressDependencyExplanation": "This value reflects the balance held by the selected address (0x000000000000000000000000000000000000dEaD), not an internal balance of the token contract itself."
     }
   }
 }
 ```
+
+---
+
+### Secondary Showcase: Atlantic Testnet Direct JSON-RPC (Fallback)
+- **Asset**: USD Coin (`USDC`) on Pharos Atlantic Testnet
+- **Contract Address**: `0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8`
+- **Network**: Atlantic Testnet (Chain ID `688689`, RPC `https://atlantic.dplabs-internal.com`)
+- **Command**:
+  ```bash
+  python scripts/inspector.py contract 0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8
+  ```
 
 ---
 

@@ -197,8 +197,12 @@ python scripts/inspector.py contract <contract_address> [--holder <address>] [--
 | `--network` | string | No | `atlantic-testnet` (default) or `mainnet` |
 | `--json` | flag | No | Output raw structured JSON for agent parsing |
 
-### Example
+### Examples
 ```bash
+# Primary Task 1 Showcase via Pharos Hosted Chain MCP (Pharos Pacific USDC)
+python scripts/inspector.py contract 0xc879c018db60520f4355c26ed1a6d572cdac1815 --mcp
+
+# Optional Direct JSON-RPC Query on Atlantic Testnet
 python scripts/inspector.py contract 0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8
 ```
 

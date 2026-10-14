@@ -430,6 +430,27 @@ class TestInspectorLiveNetwork(unittest.TestCase):
         except NetworkError as e:
             self.skipTest(f"Live Atlantic RPC unavailable: {e}")
 
+    def test_live_mcp_contract_read(self):
+        """Task 1 live inspection via Pharos Hosted Chain MCP (https://mcp.pharos.xyz/mcp)."""
+        try:
+            pacific_usdc = "0xc879c018db60520f4355c26ed1a6d572cdac1815"
+            res = self.inspector.get_contract_state(pacific_usdc, network="mainnet", use_mcp=True)
+            self.assertEqual(res["contractAddress"], pacific_usdc)
+            self.assertIn("Hosted Chain MCP", res["queryEngine"])
+            self.assertGreater(res["blockNumber"], 0)
+            s = res["stateValues"]
+            self.assertEqual(s["name"], "USDC")
+            self.assertEqual(s["symbol"], "USDC")
+            self.assertEqual(s["decimals"], 6)
+            self.assertTrue(len(s["totalSupply"]["formatted"]) > 0)
+            self.assertTrue(len(s["balanceOf"]["formatted"]) > 0)
+            print(f"\n[LIVE TASK 1 MCP SHOWCASE] Read via Chain MCP at Block {res['blockNumber']:,}:")
+            print(f"Name: {s['name']} | Symbol: {s['symbol']} | Decimals: {s['decimals']}")
+            print(f"Total Supply: {s['totalSupply']['formatted']}")
+            print(f"Burn Address Balance: {s['balanceOf']['formatted']}")
+        except NetworkError as e:
+            self.skipTest(f"Hosted MCP endpoint unavailable: {e}")
+
 
 if __name__ == "__main__":
     if "--live" in sys.argv:

@@ -113,6 +113,8 @@ class PharosInspector:
         self.assets_dir = assets_dir or find_assets_dir()
         self.networks = self._load_networks()
         self.tokens = self._load_tokens()
+        self._mcp_session_id: Optional[str] = None
+        self._mcp_cookie: Optional[str] = None
 
     def _load_networks(self) -> Dict[str, Any]:
         net_path = self.assets_dir / "networks.json"
@@ -503,42 +505,45 @@ class PharosInspector:
 
     def query_hosted_mcp(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Query tools via the hosted Streamable HTTP MCP server (https://mcp.pharos.xyz/mcp)."""
-        # Step 1: Initialize session
-        init_payload = {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {},
-                "clientInfo": {"name": "pharos-inspector-client", "version": "1.0.0"}
+        # Step 1: Initialize session if not already active
+        if not self._mcp_session_id:
+            init_payload = {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {},
+                    "clientInfo": {"name": "pharos-inspector-client", "version": "1.0.0"}
+                }
             }
-        }
-        init_req = urllib.request.Request(
-            HOSTED_MCP_URL,
-            data=json.dumps(init_payload).encode("utf-8"),
-            headers={
-                "Content-Type": "application/json",
-                "Accept": "application/json, text/event-stream",
-                "User-Agent": USER_AGENT
-            },
-            method="POST"
-        )
-        try:
-            with urllib.request.urlopen(init_req, timeout=DEFAULT_TIMEOUT) as resp:
-                session_id = resp.headers.get("mcp-session-id")
-                cookie = resp.headers.get("Set-Cookie")
-        except Exception as e:
-            raise NetworkError(f"Failed to initialize session with Hosted MCP ({HOSTED_MCP_URL}): {e}") from e
+            init_req = urllib.request.Request(
+                HOSTED_MCP_URL,
+                data=json.dumps(init_payload).encode("utf-8"),
+                headers={
+                    "Content-Type": "application/json",
+                    "Accept": "application/json, text/event-stream",
+                    "User-Agent": USER_AGENT
+                },
+                method="POST"
+            )
+            try:
+                with urllib.request.urlopen(init_req, timeout=DEFAULT_TIMEOUT) as resp:
+                    session_id = resp.headers.get("mcp-session-id")
+                    cookie = resp.headers.get("Set-Cookie")
+                    self._mcp_session_id = session_id
+                    self._mcp_cookie = cookie.split(";")[0] if cookie else None
+            except Exception as e:
+                raise NetworkError(f"Failed to initialize session with Hosted MCP ({HOSTED_MCP_URL}): {e}") from e
 
         common_headers = {
             "Content-Type": "application/json",
             "Accept": "application/json, text/event-stream",
             "User-Agent": USER_AGENT,
-            "mcp-session-id": session_id or ""
+            "mcp-session-id": self._mcp_session_id or ""
         }
-        if cookie:
-            common_headers["Cookie"] = cookie.split(";")[0]
+        if self._mcp_cookie:
+            common_headers["Cookie"] = self._mcp_cookie
 
         # Step 2: Call tool
         call_payload = {
@@ -579,53 +584,58 @@ class PharosInspector:
 
 
 def cli_main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Pharos On-Chain Data & Portfolio Inspector (Read-Only, Zero-Cost)"
-    )
-    parser.add_argument(
+    # Common flags accepted both before and after subcommands
+    common_parser = argparse.ArgumentParser(add_help=False)
+    common_parser.add_argument(
         "--network",
         default="atlantic-testnet",
         choices=["atlantic-testnet", "mainnet"],
         help="Target Pharos network (default: atlantic-testnet)"
     )
-    parser.add_argument(
+    common_parser.add_argument(
         "--json",
         action="store_true",
         help="Output raw JSON format"
     )
 
+    parser = argparse.ArgumentParser(
+        description="Pharos On-Chain Data & Portfolio Inspector (Read-Only, Zero-Cost)",
+        parents=[common_parser]
+    )
+
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Subcommand: status
-    subparsers.add_parser("status", help="Check Pharos node block height and client status")
+    subparsers.add_parser("status", parents=[common_parser], help="Check Pharos node block height and client status")
 
     # Subcommand: balance
-    bal_parser = subparsers.add_parser("balance", help="Query native PHRS/PROS balance of an address")
+    bal_parser = subparsers.add_parser("balance", parents=[common_parser], help="Query native PHRS/PROS balance of an address")
     bal_parser.add_argument("address", help="Target EVM address (0x...)")
 
     # Subcommand: token
-    tok_parser = subparsers.add_parser("token", help="Query specific ERC-20 token balance")
+    tok_parser = subparsers.add_parser("token", parents=[common_parser], help="Query specific ERC-20 token balance")
     tok_parser.add_argument("address", help="Wallet owner address (0x...)")
     tok_parser.add_argument("token_address", help="ERC-20 contract address (0x...)")
     tok_parser.add_argument("--decimals", type=int, default=18, help="Token decimals (default: 18)")
     tok_parser.add_argument("--symbol", default="TOKEN", help="Token symbol")
 
     # Subcommand: contract (Task 1 compliance)
-    c_parser = subparsers.add_parser("contract", help="Read multi-state values from a deployed smart contract (Task 1 compliance)")
+    c_parser = subparsers.add_parser("contract", parents=[common_parser], help="Read multi-state values from a deployed smart contract (Task 1 compliance)")
     c_parser.add_argument("contract_address", help="Target contract EVM address (0x...)")
     c_parser.add_argument("--holder", default=None, help="Optional holder address for balanceOf check (defaults to 0x...dEaD)")
-    c_parser.add_argument("--mcp", action="store_true", help="Query via Pharos Hosted Chain MCP instead of direct JSON-RPC")
+    c_parser.add_argument("--mcp", action="store_true", default=False, help="Query via Pharos Hosted Chain MCP")
+    c_parser.add_argument("--rpc", action="store_true", default=False, help="Force direct JSON-RPC query instead of Chain MCP")
 
     # Subcommand: portfolio
-    port_parser = subparsers.add_parser("portfolio", help="Query native + all registered token balances")
+    port_parser = subparsers.add_parser("portfolio", parents=[common_parser], help="Query native + all registered token balances")
     port_parser.add_argument("address", help="Target wallet address (0x...)")
 
     # Subcommand: tx
-    tx_parser = subparsers.add_parser("tx", help="Query confirmation status of a transaction hash")
+    tx_parser = subparsers.add_parser("tx", parents=[common_parser], help="Query confirmation status of a transaction hash")
     tx_parser.add_argument("tx_hash", help="Transaction hash (0x...)")
 
     # Subcommand: mcp
-    mcp_parser = subparsers.add_parser("mcp", help="Query live data via Pharos Hosted MCP endpoint")
+    mcp_parser = subparsers.add_parser("mcp", parents=[common_parser], help="Query live data via Pharos Hosted MCP endpoint")
     mcp_parser.add_argument("tool", help="MCP tool name (e.g. get_chain_info, get_block_number, get_balance)")
     mcp_parser.add_argument("--args", default="{}", help="JSON string of arguments for the tool")
 
@@ -648,11 +658,17 @@ def cli_main() -> None:
                 network=args.network
             )
         elif args.command == "contract":
+            target_network = args.network
+            # If --mcp is requested on default testnet, automatically route to mainnet where hosted MCP is connected
+            if args.mcp and target_network == "atlantic-testnet":
+                target_network = "mainnet"
+            # Primary engine for Task 1: use MCP if --mcp flag passed or if querying mainnet unless --rpc is explicitly forced
+            use_mcp = args.mcp or (target_network == "mainnet" and not getattr(args, "rpc", False))
             result = inspector.get_contract_state(
                 contract_address=args.contract_address,
                 holder_address=args.holder,
-                network=args.network,
-                use_mcp=args.mcp
+                network=target_network,
+                use_mcp=use_mcp
             )
         elif args.command == "portfolio":
             result = inspector.get_portfolio(args.address, network=args.network)
