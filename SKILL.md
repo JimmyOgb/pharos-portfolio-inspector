@@ -16,6 +16,7 @@ A packaged developer skill for AI agents interacting with the Pharos blockchain.
 | User Need | Capability | Detailed Instructions |
 |---|---|---|
 | Read deployed contract state via Chain MCP (Task 1) | `python scripts/inspector.py contract <contract_address> --mcp` | → `references/query.md#7-smart-contract-multi-state-inspection` |
+| Monitor on-chain events via Chain MCP (Task 2) | `python scripts/monitor.py --contract <address> --event <name>` | → `README.md#arena-task-2-showcase-continuous-eventlog-monitor-via-chain-mcp` |
 | View wallet portfolio / all asset holdings | `python scripts/inspector.py portfolio <address>` | → `references/query.md#4-wallet-portfolio-overview` |
 | Query native balance (PHRS / PROS) | `python scripts/inspector.py balance <address>` | → `references/query.md#2-address-balance-query` |
 | Query ERC-20 token balance | `python scripts/inspector.py token <address> <token>` | → `references/query.md#3-erc-20-token-balance-query` |

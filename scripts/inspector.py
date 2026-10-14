@@ -15,11 +15,24 @@ import json
 import os
 import re
 import sys
+import socket
 import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+# Ensure IPv4 resolution precedence for stable HTTPS connections across Windows NAT64 environments
+_orig_getaddrinfo = socket.getaddrinfo
+
+def _getaddrinfo_v4(host, port, family=0, type=0, proto=0, flags=0):
+    try:
+        return _orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+    except Exception:
+        return _orig_getaddrinfo(host, port, family, type, proto, flags)
+
+socket.getaddrinfo = _getaddrinfo_v4
+
 
 # Address format: 0x followed by exactly 40 hexadecimal characters
 ETH_ADDRESS_REGEX = re.compile(r"^0x[0-9a-fA-F]{40}$")
