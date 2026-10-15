@@ -233,6 +233,17 @@ python scripts/inspector.py portfolio 0x000000000000000000000000000000000000dEaD
 python scripts/inspector.py mcp get_chain_info
 ```
 
+### 5. Query Developer Docs MCP Dynamically (Arena Task 3 Showcase)
+```bash
+# Query technical question via official GitBook agentic ask API ($0, zero dependencies)
+python scripts/docs_query.py "What is the RPC URL and Chain ID for Pacific Mainnet?"
+
+# Output structured JSON for autonomous agent workflows
+python scripts/docs_query.py "What tools are provided by Pharos Chain MCP?" --json
+```
+
+See the complete official onboarding audit report: [`reports/PHAROS_TASK3_DOCS_MCP_ONBOARDING.md`](reports/PHAROS_TASK3_DOCS_MCP_ONBOARDING.md).
+
 ---
 
 ## Running the Automated Test Suite
@@ -241,11 +252,11 @@ python scripts/inspector.py mcp get_chain_info
 ```bash
 python -m unittest discover tests -v
 ```
-*Executes 48 deterministic unit tests (29 for Task 1, 19 for Task 2) covering ABI decoding, precision math, topic address extraction, event signature resolution, deduplication FIFO eviction, log filtering, and window chunking in ~0.15 seconds.*
+*Executes 53 deterministic unit tests (29 for Task 1, 19 for Task 2, 7 for Task 3) covering ABI decoding, precision math, topic address extraction, event signature resolution, deduplication FIFO eviction, log filtering, window chunking, and Docs MCP parameter encoding in ~0.10 seconds.*
 
-To run only Task 2 monitor tests:
+To run only Task 3 Docs query tests:
 ```bash
-python -m unittest tests/test_monitor.py -v
+python -m unittest tests/test_docs_query.py -v
 ```
 
 ### Live Integration Tests (Against Live Pacific Mainnet, Atlantic Testnet & Hosted MCP)
@@ -256,7 +267,7 @@ PHAROS_LIVE_TESTS=1 python -m unittest discover tests -v
 # On Windows PowerShell:
 $env:PHAROS_LIVE_TESTS="1"; python -m unittest discover tests -v
 ```
-*Executes all 53 tests including live block height, native balance query, hosted Chain MCP handshake, Atlantic USDC contract read, and live Pacific USDC event log monitoring.*
+*Executes all 55 tests including live block height, native balance query, hosted Chain MCP handshake, Atlantic USDC contract read, live Pacific USDC event log monitoring, and live Docs MCP querying.*
 
 ---
 

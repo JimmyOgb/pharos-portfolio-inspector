@@ -22,6 +22,7 @@ A packaged developer skill for AI agents interacting with the Pharos blockchain.
 | Query ERC-20 token balance | `python scripts/inspector.py token <address> <token>` | → `references/query.md#3-erc-20-token-balance-query` |
 | Check transaction confirmation & execution status | `python scripts/inspector.py tx <tx_hash>` | → `references/query.md#5-transaction-confirmation-query` |
 | Check Pharos block height & node status | `python scripts/inspector.py status` | → `references/query.md#1-network-status--node-synchronization` |
+| Query official Docs via Developer Docs MCP (Task 3) | `python scripts/docs_query.py "<question>"` | → `references/query.md#8-developer-docs-agentic-query-task-3-compliance` |
 | Query via Hosted Pharos MCP server | `python scripts/inspector.py mcp <tool_name>` | → `references/query.md#6-hosted-mcp-tool-query` |
 
 ---

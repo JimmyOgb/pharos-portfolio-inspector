@@ -206,3 +206,31 @@ python scripts/inspector.py contract 0xc879c018db60520f4355c26ed1a6d572cdac1815 
 python scripts/inspector.py contract 0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8
 ```
 
+---
+
+## 8. Developer Docs Agentic Query (Arena Task 3 Compliance)
+
+### Overview
+Queries the official Pharos documentation dynamic agentic ask interface (`https://docs.pharos.xyz/index.md?ask=<question>&goal=<goal>`) as specified in `https://docs.pharos.xyz/llms-full.txt`. Returns contextual markdown answers, follow-up links, and source citations without requiring third-party API keys or external subscriptions ($0 cost).
+
+### Command Template
+```bash
+python scripts/docs_query.py "<question>" [--goal "<user_goal>"] [--json] [--timeout <seconds>]
+```
+
+### Parameters
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `<question>` | string | Yes | Natural-language technical question regarding Pharos |
+| `--goal` | string | No | High-level user goal to tailor dynamic response (defaults to agent development) |
+| `--json` | flag | No | Outputs raw structured JSON for agent consumption |
+| `--timeout` | int | No | Request timeout in seconds (default: 25) |
+
+### Examples
+```bash
+# Query Network Configuration
+python scripts/docs_query.py "What is the RPC URL and Chain ID for Pacific Mainnet?"
+
+# Output Structured JSON for AI Agents
+python scripts/docs_query.py "What tools are provided by Pharos Chain MCP?" --json
+```
