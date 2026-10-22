@@ -22,8 +22,8 @@ A packaged developer skill for AI agents interacting with the Pharos blockchain.
 | Query ERC-20 token balance | `python scripts/inspector.py token <address> <token>` | → `references/query.md#3-erc-20-token-balance-query` |
 | Check transaction confirmation & execution status | `python scripts/inspector.py tx <tx_hash>` | → `references/query.md#5-transaction-confirmation-query` |
 | Check Pharos block height & node status | `python scripts/inspector.py status` | → `references/query.md#1-network-status--node-synchronization` |
-| Query official Docs via Developer Docs MCP (Task 3) | `python scripts/docs_query.py "<question>"` | → `references/query.md#8-developer-docs-agentic-query-task-3-compliance` |
-| Query via Hosted Pharos MCP server | `python scripts/inspector.py mcp <tool_name>` | → `references/query.md#6-hosted-mcp-tool-query` |
+| Query official Docs via Developer Docs MCP (Task 3) | `python scripts/docs_query.py "<question>"` | → `references/query.md#8-developer-docs-mcp-integration-arena-task-3-compliance` |
+| Query via Hosted Pharos Chain MCP server | `python scripts/inspector.py mcp <tool_name>` | → `references/query.md#6-hosted-mcp-tool-query` |
 
 ---
 
@@ -40,7 +40,8 @@ Network parameters are stored in `assets/networks.json`:
   - **Chain ID**: `1672` (`0x688`)
   - **Native Token**: `PROS`
   - **Explorer**: `https://www.pharosscan.xyz/`
-- **Hosted MCP Endpoint**: `https://mcp.pharos.xyz/mcp` (Streamable HTTP, read-only)
+- **Hosted Chain MCP Endpoint**: `https://mcp.pharos.xyz/mcp` (Streamable HTTP, 14 EVM read-only tools)
+- **Hosted Developer Docs MCP Endpoint**: `https://docs.pharos.xyz/~gitbook/mcp` (Streamable HTTP, 4 doc tools)
 
 ---
 

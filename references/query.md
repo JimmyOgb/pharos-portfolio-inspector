@@ -208,29 +208,73 @@ python scripts/inspector.py contract 0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8
 
 ---
 
-## 8. Developer Docs Agentic Query (Arena Task 3 Compliance)
+## 8. Developer Docs MCP Integration (Arena Task 3 Compliance)
 
 ### Overview
-Queries the official Pharos documentation dynamic agentic ask interface (`https://docs.pharos.xyz/index.md?ask=<question>&goal=<goal>`) as specified in `https://docs.pharos.xyz/llms-full.txt`. Returns contextual markdown answers, follow-up links, and source citations without requiring third-party API keys or external subscriptions ($0 cost).
+Wraps the official Pharos Developer Docs Model Context Protocol (MCP) server (`https://docs.pharos.xyz/~gitbook/mcp`) using Streamable HTTP / SSE JSON-RPC 2.0 (MCP Protocol version `2024-11-05`). Provides direct, autonomous access to official Pharos documentation search, page retrieval, and synthesized answers with citations without external dependencies or API keys ($0 cost).
 
-### Command Template
+### MCP Server Connection Details
+* **Hosted Docs MCP URL**: `https://docs.pharos.xyz/~gitbook/mcp`
+* **Transport**: Streamable HTTP / Server-Sent Events (`text/event-stream`, `application/json`)
+* **Protocol Version**: `2024-11-05`
+* **Server Name**: `docs.pharos.xyz/~gitbook/mcp` (`docs.pharos.xyz MCP Server` v0.27.2)
+* **Authentication**: None required (public read-only)
+
+#### Cursor / Claude Desktop Configuration
+```json
+{
+  "mcpServers": {
+    "pharos-docs": {
+      "type": "http",
+      "url": "https://docs.pharos.xyz/~gitbook/mcp"
+    }
+  }
+}
+```
+
+#### Command Template
 ```bash
+# Ask a technical question (uses Docs MCP askQuestion tool)
 python scripts/docs_query.py "<question>" [--goal "<user_goal>"] [--json] [--timeout <seconds>]
+
+# Semantic documentation search (uses Docs MCP searchDocumentation tool)
+python scripts/docs_query.py --search "<search_term>"
+
+# Fetch full page markdown (uses Docs MCP getPage tool)
+python scripts/docs_query.py --page "<full_page_url>"
+
+# Discover available Docs MCP tools
+python scripts/docs_query.py --list-tools
 ```
 
 ### Parameters
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `<question>` | string | Yes | Natural-language technical question regarding Pharos |
-| `--goal` | string | No | High-level user goal to tailor dynamic response (defaults to agent development) |
+| `<question>` | string | No | Technical question submitted to Docs MCP `askQuestion` tool |
+| `--search` | string | No | Search query submitted to Docs MCP `searchDocumentation` tool |
+| `--page` | string | No | Full URL submitted to Docs MCP `getPage` tool |
+| `--list-tools` | flag | No | Discovers and prints all registered MCP tools |
+| `--goal` | string | No | Developer goal context passed to MCP tool (default: agent development) |
 | `--json` | flag | No | Outputs raw structured JSON for agent consumption |
-| `--timeout` | int | No | Request timeout in seconds (default: 25) |
+| `--endpoint` | string | No | Custom Docs MCP endpoint (defaults to `https://docs.pharos.xyz/~gitbook/mcp`) |
+| `--timeout` | int | No | Request timeout in seconds (default: 35) |
+
+### Discovered Docs MCP Tools
+| Tool Name | Purpose | Key Arguments |
+|---|---|---|
+| `askQuestion` | Synthesized answer with source page citations | `question` (string, required), `goal` (string, optional) |
+| `searchDocumentation` | Search documentation returning titles, links, snippets | `query` (string, required) |
+| `getPage` | Fetch full markdown content of a documentation page | `url` (string, required) |
+| `sendFeedback` | Report documentation issues to the documentation team | `content` (string, required), `pageUrl` (string, required) |
 
 ### Examples
 ```bash
-# Query Network Configuration
+# Ask Docs MCP about Pacific Mainnet parameters
 python scripts/docs_query.py "What is the RPC URL and Chain ID for Pacific Mainnet?"
 
-# Output Structured JSON for AI Agents
-python scripts/docs_query.py "What tools are provided by Pharos Chain MCP?" --json
+# Search documentation for Atlantic RPC configuration
+python scripts/docs_query.py --search "Atlantic RPC"
+
+# Discover all tools exposed by the Docs MCP server
+python scripts/docs_query.py --list-tools --json
 ```
